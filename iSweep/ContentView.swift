@@ -3,33 +3,69 @@ import SwiftUI
 struct ContentView: View {
     @StateObject private var viewModel = GameViewModel()
     @State private var showingDifficultyPicker = false
+    @State private var zoomScale: CGFloat = 1.0
+    @State private var baseZoomScale: CGFloat = 1.0
     
     var body: some View {
-        NavigationView {
-            VStack(spacing: 0) {
-                // Header with mine count, smiley face, and timer
-                headerView
-                
-                // Game grid
-                ScrollView([.horizontal, .vertical], showsIndicators: false) {
-                    gameGrid
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 10)
+        GeometryReader { geometry in
+            NavigationView {
+                VStack(spacing: 0) {
+                    // Header with mine count, smiley face, and timer
+                    headerView
+                    
+                    // Game grid with zoom support
+                    ScrollView([.horizontal, .vertical], showsIndicators: false) {
+                        gameGrid
+                            .scaleEffect(zoomScale)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 10)
+                    }
+                    .gesture(
+                        MagnificationGesture()
+                            .onChanged { value in
+                                // Apply zoom relative to base scale
+                                let newScale = max(0.5, min(3.0, baseZoomScale * value))
+                                zoomScale = newScale
+                            }
+                            .onEnded { value in
+                                // Update base scale when gesture ends
+                                baseZoomScale = zoomScale
+                            }
+                    )
+                    .onTapGesture(count: 2) {
+                        // Double-tap to reset zoom
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            zoomScale = 1.0
+                            baseZoomScale = 1.0
+                        }
+                    }
+                    .clipped()
+                    
+                    // Only show spacer and difficulty button if there's enough vertical space
+                    if geometry.size.height > 500 {
+                        Spacer()
+                        difficultyButton
+                        Spacer()
+                    } else {
+                        difficultyButton
+                            .padding(.vertical, 8)
+                    }
                 }
-                
-                Spacer()
-                
-                // Difficulty picker button
-                difficultyButton
-                
-                Spacer()
+                .navigationTitle("iSweep")
+                .navigationBarTitleDisplayMode(.inline)
+                .background(Color(red: 0.9, green: 0.9, blue: 0.9))
             }
-            .navigationTitle("iSweep")
-            .navigationBarTitleDisplayMode(.inline)
-            .background(Color(red: 0.9, green: 0.9, blue: 0.9))
+            .navigationViewStyle(StackNavigationViewStyle()) // Forces single view layout on all devices
         }
         .sheet(isPresented: $showingDifficultyPicker) {
             difficultyPickerView
+        }
+        .onChange(of: viewModel.difficulty) {
+            // Reset zoom when difficulty changes
+            withAnimation(.easeInOut(duration: 0.3)) {
+                zoomScale = 1.0
+                baseZoomScale = 1.0
+            }
         }
     }
     

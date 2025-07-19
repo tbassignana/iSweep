@@ -202,6 +202,13 @@ class GameModel: ObservableObject {
     
     func cellLongPressed(row: Int, col: Int) {
         guard gameState == .playing || gameState == .notStarted else { return }
+        
+        // If cell is already revealed, perform chording
+        if cells[row][col].isRevealed && cells[row][col].adjacentMines > 0 {
+            performChording(row: row, col: col)
+            return
+        }
+        
         guard !cells[row][col].isRevealed else { return }
         
         if cells[row][col].isFlagged {
@@ -213,6 +220,55 @@ class GameModel: ObservableObject {
         }
         
         // Check win condition in case all mines are flagged
+        checkWinCondition()
+    }
+    
+    // MARK: - Chording
+    private func performChording(row: Int, col: Int) {
+        let cell = cells[row][col]
+        guard cell.isRevealed && cell.adjacentMines > 0 else { return }
+        
+        // Count flagged adjacent cells
+        var flaggedCount = 0
+        var adjacentCells: [(Int, Int)] = []
+        
+        for deltaRow in -1...1 {
+            for deltaCol in -1...1 {
+                if deltaRow == 0 && deltaCol == 0 { continue }
+                
+                let newRow = row + deltaRow
+                let newCol = col + deltaCol
+                
+                if isValidPosition(row: newRow, col: newCol) {
+                    adjacentCells.append((newRow, newCol))
+                    if cells[newRow][newCol].isFlagged {
+                        flaggedCount += 1
+                    }
+                }
+            }
+        }
+        
+        // Only perform chording if the number of flags equals the adjacent mine count
+        guard flaggedCount == cell.adjacentMines else { return }
+        
+        // Reveal all unflagged adjacent cells
+        for (adjRow, adjCol) in adjacentCells {
+            let adjCell = cells[adjRow][adjCol]
+            if !adjCell.isFlagged && !adjCell.isRevealed {
+                if adjCell.isMine {
+                    // Hit a mine during chording - game over
+                    gameState = .lost
+                    revealAllMines()
+                    stopTimer()
+                    return
+                } else {
+                    // Reveal the cell
+                    revealCell(row: adjRow, col: adjCol)
+                }
+            }
+        }
+        
+        // Check win condition after chording
         checkWinCondition()
     }
     
