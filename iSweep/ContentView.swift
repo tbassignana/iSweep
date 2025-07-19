@@ -5,6 +5,8 @@ struct ContentView: View {
     @State private var showingDifficultyPicker = false
     @State private var zoomScale: CGFloat = 1.0
     @State private var baseZoomScale: CGFloat = 1.0
+    @State private var offset: CGSize = .zero
+    @State private var lastOffset: CGSize = .zero
     
     var body: some View {
         GeometryReader { geometry in
@@ -13,30 +15,51 @@ struct ContentView: View {
                     // Header with mine count, smiley face, and timer
                     headerView
                     
+                    // Zoom controls
+                    HStack {
+                        Spacer()
+                        zoomControls
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 8)
+                    
                     // Game grid with zoom support
                     ScrollView([.horizontal, .vertical], showsIndicators: false) {
                         gameGrid
                             .scaleEffect(zoomScale)
+                            .offset(offset)
                             .padding(.horizontal, 20)
                             .padding(.vertical, 10)
                     }
                     .gesture(
-                        MagnificationGesture()
-                            .onChanged { value in
-                                // Apply zoom relative to base scale
-                                let newScale = max(0.5, min(3.0, baseZoomScale * value))
-                                zoomScale = newScale
-                            }
-                            .onEnded { value in
-                                // Update base scale when gesture ends
-                                baseZoomScale = zoomScale
-                            }
+                        SimultaneousGesture(
+                            MagnificationGesture()
+                                .onChanged { value in
+                                    let newScale = max(0.5, min(3.0, baseZoomScale * value))
+                                    zoomScale = newScale
+                                }
+                                .onEnded { value in
+                                    baseZoomScale = zoomScale
+                                },
+                            DragGesture()
+                                .onChanged { value in
+                                    offset = CGSize(
+                                        width: lastOffset.width + value.translation.width,
+                                        height: lastOffset.height + value.translation.height
+                                    )
+                                }
+                                .onEnded { value in
+                                    lastOffset = offset
+                                }
+                        )
                     )
                     .onTapGesture(count: 2) {
-                        // Double-tap to reset zoom
+                        // Double-tap to reset zoom and offset
                         withAnimation(.easeInOut(duration: 0.3)) {
                             zoomScale = 1.0
                             baseZoomScale = 1.0
+                            offset = .zero
+                            lastOffset = .zero
                         }
                     }
                     .clipped()
@@ -59,6 +82,9 @@ struct ContentView: View {
         }
         .sheet(isPresented: $showingDifficultyPicker) {
             difficultyPickerView
+        }
+        .sheet(isPresented: .constant(viewModel.showingLeaderboard)) {
+            leaderboardView
         }
         .onChange(of: viewModel.difficulty) {
             // Reset zoom when difficulty changes
@@ -160,6 +186,41 @@ struct ContentView: View {
         .padding(.horizontal, 20)
     }
     
+    // MARK: - Zoom Controls
+    private var zoomControls: some View {
+        HStack(spacing: 12) {
+            Button(action: {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    let newScale = max(0.5, zoomScale - 0.2)
+                    zoomScale = newScale
+                    baseZoomScale = newScale
+                }
+            }) {
+                Image(systemName: "minus.circle.fill")
+                    .font(.title2)
+                    .foregroundColor(.blue)
+                    .background(Color.white)
+                    .clipShape(Circle())
+                    .shadow(radius: 2)
+            }
+            
+            Button(action: {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    let newScale = min(3.0, zoomScale + 0.2)
+                    zoomScale = newScale
+                    baseZoomScale = newScale
+                }
+            }) {
+                Image(systemName: "plus.circle.fill")
+                    .font(.title2)
+                    .foregroundColor(.blue)
+                    .background(Color.white)
+                    .clipShape(Circle())
+                    .shadow(radius: 2)
+            }
+        }
+    }
+    
     // MARK: - Difficulty Picker View
     private var difficultyPickerView: some View {
         NavigationView {
@@ -199,6 +260,88 @@ struct ContentView: View {
             .navigationBarItems(trailing: Button("Done") {
                 showingDifficultyPicker = false
             })
+        }
+    }
+    
+    // MARK: - Leaderboard View
+    private var leaderboardView: some View {
+        NavigationView {
+            VStack(spacing: 24) {
+                if viewModel.isNewRecord {
+                    VStack {
+                        Text("🎉 NEW RECORD! 🎉")
+                            .font(.title)
+                            .fontWeight(.bold)
+                            .foregroundColor(.orange)
+                        Text("Congratulations!")
+                            .font(.headline)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.bottom, 16)
+                } else {
+                    Text("Congratulations!")
+                        .font(.title)
+                        .fontWeight(.bold)
+                        .padding(.bottom, 16)
+                }
+                
+                VStack(spacing: 16) {
+                    Text("High Scores")
+                        .font(.title2)
+                        .fontWeight(.semibold)
+                    
+                    ForEach(GameDifficulty.allCases, id: \.self) { difficulty in
+                        HStack {
+                            VStack(alignment: .leading) {
+                                Text(difficulty.displayName)
+                                    .font(.headline)
+                                Text("\(difficulty.gridSize.width) × \(difficulty.gridSize.height), \(difficulty.mineCount) mines")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            Spacer()
+                            
+                            if let highScore = viewModel.highScoreManager.getHighScore(for: difficulty) {
+                                VStack(alignment: .trailing) {
+                                    Text(highScore.formattedTime)
+                                        .font(.title3)
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(difficulty == viewModel.difficulty && viewModel.isNewRecord ? .orange : .primary)
+                                    Text(DateFormatter.localizedString(from: highScore.date, dateStyle: .short, timeStyle: .none))
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                            } else {
+                                Text("--:--")
+                                    .font(.title3)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        .padding()
+                        .background(difficulty == viewModel.difficulty ? Color.blue.opacity(0.1) : Color.clear)
+                        .cornerRadius(8)
+                    }
+                }
+                
+                Spacer()
+                
+                Button("OK") {
+                    viewModel.dismissLeaderboard()
+                    viewModel.resetGame()
+                }
+                .font(.headline)
+                .padding(.horizontal, 40)
+                .padding(.vertical, 12)
+                .background(Color.blue)
+                .foregroundColor(.white)
+                .cornerRadius(10)
+                .padding(.bottom, 20)
+            }
+            .padding()
+            .navigationTitle("Game Complete")
+            .navigationBarTitleDisplayMode(.inline)
         }
     }
 }

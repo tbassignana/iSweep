@@ -73,6 +73,26 @@ class GameViewModel: ObservableObject {
         gameModel.difficulty.gridSize.height
     }
     
+    var showingLeaderboard: Bool {
+        gameModel.showingLeaderboard
+    }
+    
+    var isNewRecord: Bool {
+        gameModel.isNewRecord
+    }
+    
+    var highScoreManager: HighScoreManager {
+        gameModel.highScoreManager
+    }
+    
+    var soundManager: SoundManager {
+        gameModel.soundManager
+    }
+    
+    func dismissLeaderboard() {
+        gameModel.dismissLeaderboard()
+    }
+    
     // MARK: - Formatting Helpers
     func formattedTime() -> String {
         let minutes = timeElapsed / 60

@@ -14,6 +14,8 @@
 		A12345678901234567890123456789A9 /* GameViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A12345678901234567890123456789B0 /* GameViewModel.swift */; };
 		A12345678901234567890123456789B1 /* GameModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A12345678901234567890123456789B2 /* GameModel.swift */; };
 		A12345678901234567890123456789B3 /* MineCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = A12345678901234567890123456789B4 /* MineCell.swift */; };
+		A12345678901234567890123456789D1 /* HighScoreManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A12345678901234567890123456789D2 /* HighScoreManager.swift */; };
+		A12345678901234567890123456789D3 /* SoundManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A12345678901234567890123456789D4 /* SoundManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -25,6 +27,8 @@
 		A12345678901234567890123456789B2 /* GameModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameModel.swift; sourceTree = "<group>"; };
 		A12345678901234567890123456789B4 /* MineCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MineCell.swift; sourceTree = "<group>"; };
 		A12345678901234567890123456789B5 /* iSweep.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iSweep.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A12345678901234567890123456789D2 /* HighScoreManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HighScoreManager.swift; sourceTree = "<group>"; };
+		A12345678901234567890123456789D4 /* SoundManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -54,6 +58,8 @@
 				A12345678901234567890123456789B0 /* GameViewModel.swift */,
 				A12345678901234567890123456789B2 /* GameModel.swift */,
 				A12345678901234567890123456789B4 /* MineCell.swift */,
+				A12345678901234567890123456789D2 /* HighScoreManager.swift */,
+				A12345678901234567890123456789D4 /* SoundManager.swift */,
 				A12345678901234567890123456789A6 /* Assets.xcassets */,
 				A12345678901234567890123456789C0 /* Preview Content */,
 			);
@@ -150,6 +156,8 @@
 				A12345678901234567890123456789B3 /* MineCell.swift in Sources */,
 				A12345678901234567890123456789B1 /* GameModel.swift in Sources */,
 				A12345678901234567890123456789A9 /* GameViewModel.swift in Sources */,
+				A12345678901234567890123456789D1 /* HighScoreManager.swift in Sources */,
+				A12345678901234567890123456789D3 /* SoundManager.swift in Sources */,
 				A12345678901234567890123456789A1 /* iSweepApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

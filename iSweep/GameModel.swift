@@ -1,7 +1,7 @@
 import Foundation
 
 // MARK: - Game Difficulty
-enum GameDifficulty: CaseIterable {
+enum GameDifficulty: CaseIterable, Codable {
     case beginner
     case intermediate  
     case expert
@@ -94,6 +94,11 @@ class GameModel: ObservableObject {
     @Published var flagCount: Int = 0
     @Published var timeElapsed: Int = 0
     @Published var isFirstMove: Bool = true
+    @Published var showingLeaderboard: Bool = false
+    @Published var isNewRecord: Bool = false
+    
+    let highScoreManager = HighScoreManager()
+    let soundManager = SoundManager()
     
     private var timer: Timer?
     private var width: Int { difficulty.gridSize.width }
@@ -177,6 +182,9 @@ class GameModel: ObservableObject {
         guard gameState == .playing || gameState == .notStarted else { return }
         guard !cells[row][col].isFlagged else { return }
         
+        // Play touch sound
+        soundManager.playSound(.touch)
+        
         // First move - generate mines and start timer
         if isFirstMove {
             generateMines(avoiding: row, firstTapCol: col)
@@ -190,6 +198,7 @@ class GameModel: ObservableObject {
             gameState = .lost
             revealAllMines()
             stopTimer()
+            soundManager.playSound(.mine)
             return
         }
         
@@ -214,9 +223,11 @@ class GameModel: ObservableObject {
         if cells[row][col].isFlagged {
             cells[row][col].isFlagged = false
             flagCount -= 1
+            soundManager.playSound(.unflag)
         } else if flagCount < totalMines {
             cells[row][col].isFlagged = true
             flagCount += 1
+            soundManager.playSound(.flag)
         }
         
         // Check win condition in case all mines are flagged
@@ -251,6 +262,9 @@ class GameModel: ObservableObject {
         // Only perform chording if the number of flags equals the adjacent mine count
         guard flaggedCount == cell.adjacentMines else { return }
         
+        // Play chord sound
+        soundManager.playSound(.chord)
+        
         // Reveal all unflagged adjacent cells
         for (adjRow, adjCol) in adjacentCells {
             let adjCell = cells[adjRow][adjCol]
@@ -260,6 +274,7 @@ class GameModel: ObservableObject {
                     gameState = .lost
                     revealAllMines()
                     stopTimer()
+                    soundManager.playSound(.mine)
                     return
                 } else {
                     // Reveal the cell
@@ -321,6 +336,11 @@ class GameModel: ObservableObject {
         if revealedCount == totalNonMineCells {
             gameState = .won
             stopTimer()
+            soundManager.playSound(.win)
+            
+            // Check for high score
+            isNewRecord = highScoreManager.checkAndSaveHighScore(time: timeElapsed, difficulty: difficulty)
+            showingLeaderboard = true
             
             // Auto-flag remaining mines
             for row in 0..<height {
@@ -352,7 +372,15 @@ class GameModel: ObservableObject {
     }
     
     func resetGame() {
+        soundManager.playSound(.restart)
+        showingLeaderboard = false
+        isNewRecord = false
         initializeGame()
+    }
+    
+    func dismissLeaderboard() {
+        showingLeaderboard = false
+        isNewRecord = false
     }
     
     func changeDifficulty(to newDifficulty: GameDifficulty) {
