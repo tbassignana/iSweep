@@ -102,6 +102,7 @@ struct ContentView: View {
                 )
             }
         }
+        .id(viewModel.difficulty) // Force recreation when difficulty changes
         .padding(8)
         .background(Color(red: 0.75, green: 0.75, blue: 0.75))
         .overlay(

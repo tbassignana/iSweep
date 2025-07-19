@@ -1,19 +1,34 @@
 import Foundation
 import SwiftUI
+import Combine
 
 class GameViewModel: ObservableObject {
     @Published var gameModel: GameModel
+    private var cancellables = Set<AnyCancellable>()
     
     init(difficulty: GameDifficulty = .beginner) {
         self.gameModel = GameModel(difficulty: difficulty)
+        
+        // Forward all changes from gameModel to this view model
+        gameModel.objectWillChange.sink { [weak self] in
+            self?.objectWillChange.send()
+        }.store(in: &cancellables)
     }
     
     // MARK: - Game Actions
     func cellTapped(row: Int, col: Int) {
+        // Bounds checking
+        guard row >= 0 && row < gridHeight && col >= 0 && col < gridWidth else {
+            return
+        }
         gameModel.cellTapped(row: row, col: col)
     }
     
     func cellLongPressed(row: Int, col: Int) {
+        // Bounds checking
+        guard row >= 0 && row < gridHeight && col >= 0 && col < gridWidth else {
+            return
+        }
         gameModel.cellLongPressed(row: row, col: col)
     }
     

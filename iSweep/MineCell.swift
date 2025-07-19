@@ -10,24 +10,23 @@ struct MineCell: View {
     let onLongPress: (Int, Int) -> Void
     
     var body: some View {
-        Button(action: {
-            onTap(row, col)
-        }) {
-            ZStack {
-                Rectangle()
-                    .fill(cellBackgroundColor)
-                    .frame(width: size, height: size)
-                    .overlay(
-                        Rectangle()
-                            .stroke(cellBorderColor, lineWidth: cellBorderWidth)
-                    )
-                
-                Text(cell.displayText)
-                    .font(.system(size: fontSize, weight: .bold, design: .monospaced))
-                    .foregroundColor(textColor)
-            }
+        ZStack {
+            Rectangle()
+                .fill(cellBackgroundColor)
+                .frame(width: size, height: size)
+                .overlay(
+                    Rectangle()
+                        .stroke(cellBorderColor, lineWidth: cellBorderWidth)
+                )
+            
+            Text(cell.displayText)
+                .font(.system(size: fontSize, weight: .bold, design: .monospaced))
+                .foregroundColor(textColor)
         }
-        .buttonStyle(PlainButtonStyle())
+        .contentShape(Rectangle())
+        .onTapGesture {
+            onTap(row, col)
+        }
         .onLongPressGesture {
             onLongPress(row, col)
         }

@@ -127,7 +127,6 @@ class GameModel: ObservableObject {
     // MARK: - Mine Generation
     private func generateMines(avoiding firstTapRow: Int, firstTapCol: Int) {
         var minesPlaced = 0
-        let totalCells = width * height
         
         while minesPlaced < totalMines {
             let randomRow = Int.random(in: 0..<height)
